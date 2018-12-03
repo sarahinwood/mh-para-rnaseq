@@ -25,6 +25,6 @@ setorder(res_group, stat)
 ranks <- res_group[!is.na(stat), stat]
 names(ranks) <- res_group[!is.na(stat), rn]
 
-fgsea_res <- fgsea(pathways, ranks, nperm = 1000)
+fgsea_res <- fgsea(pathways, ranks, nperm = 10000)
 sorted_fgsea_res <- fgsea_res[order(fgsea_res$padj)]
-##no enriched GO terms
+fwrite(sorted_fgsea_res, "output/fgsea/fgsea_developing_wasp_120vsC.csv")
