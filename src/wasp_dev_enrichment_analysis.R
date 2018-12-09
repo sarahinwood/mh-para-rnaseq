@@ -44,3 +44,20 @@ ggplot(cc_res, aes(reorder(pathway_name, NES), NES)) +
   labs(x="Cellular Component GO Pathway", y="FGSEA Normalized Enrichment Score") + 
   theme_minimal()
 
+####Core members that contribute to ES score (present in list before running sum reaches max.dev. from 0)
+sig_trans_res <- fgsea_res[fgsea_res$pathway == "GO:0007165",]
+sig_trans_leading_edge <- data.frame(sig_trans_res$leadingEdge)
+setnames(sig_trans_leading_edge, old=c("c..TRINITY_DN11338_c1_g2....TRINITY_DN7936_c0_g1....TRINITY_DN11946_c1_g6..."), new=c("gene_id"))
+sig_trans_leading_annots <- merge(sig_trans_leading_edge, trinotate_report, by.x="gene_id", by.y="#gene_id")
+fwrite(sig_trans_leading_annots, "output/fgsea/sig_trans_leading_edge_annots.csv")
+##plot enrichment of GO term
+plotEnrichment(pathways[["GO:0007165"]], ranks) + labs(title="signal transduction")
+
+##CORE MEMBERS OF TRANSCRIPTION REGULATION
+trans_reg_res <- fgsea_res[fgsea_res$pathway == "GO:0006355",]
+trans_reg_leading_edge <- data.frame(trans_reg_res$leadingEdge)
+setnames(trans_reg_leading_edge, old=c("c..TRINITY_DN12224_c3_g3....TRINITY_DN11172_c4_g2....TRINITY_DN11095_c1_g1..."), new=c("gene_id"))
+trans_reg_leading_annots <- merge(trans_reg_leading_edge, trinotate_report, by.x="gene_id", by.y="#gene_id")
+fwrite(trans_reg_leading_annots, "output/fgsea/trans_reg_leading_edge_annots.csv")
+##plot enrichment of GO term
+plotEnrichment(pathways[["GO:0006355"]], ranks) + labs(title="regulation of transcription, DNA templated")
