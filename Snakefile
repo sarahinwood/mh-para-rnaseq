@@ -77,8 +77,8 @@ rule target:
 rule salmon_quant:
     input:
         index_output = 'output/salmon/transcripts_index/hash.bin',
-        left = 'data/bbduk_trim/{sample}_r1.fq.gz',
-        right = 'data/bbduk_trim/{sample}_r2.fq.gz'
+        left = 'data/filtered_unmapped/{sample}_r1.fq.gz',
+        right = 'data/filtered_unmapped/{sample}_r2.fq.gz'
     output:
         'output/salmon/{sample}_quant/quant.sf'
     params:
