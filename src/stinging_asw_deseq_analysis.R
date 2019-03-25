@@ -5,13 +5,14 @@ library("ggplot2")
 library("Biostrings")
 library("dplyr")
 library("VennDiagram")
+library("EnhancedVolcano")
 
 ####SET-UP
-gene2tx <- fread("data/Trinity.fasta.gene_trans_map", header = FALSE)
+gene2tx <- fread("data/mh_transcriptome/Trinity.fasta.gene_trans_map", header = FALSE)
 tx2gene <- data.frame(gene2tx[, .(V2, V1)])
 
   ##Find all salmon quant files
-quant_files <- list.files(path="output/salmon/", pattern = "quant.sf", full.names=TRUE, recursive = TRUE)
+quant_files <- list.files(path="output/mh_salmon/", pattern = "quant.sf", full.names=TRUE, recursive = TRUE)
   ##assign names to quant files from folder name
 names(quant_files) <- gsub(".*/(.+)_quant/.*", "\\1", quant_files)
   ##import the salmon quant files (tx2gene links transcript ID to Gene ID - required for gene-level summarisation... 
@@ -91,10 +92,13 @@ m120_ordered_res <- res_group[order(res_group$padj),]
 m120_ordered_res_table <- data.table(data.frame(m120_ordered_res), keep.rownames = TRUE)
 ##filter for sig DEGs
 m120_ordered_sig_res_table <- subset(m120_ordered_res_table, padj < 0.05)
-fwrite(m120_ordered_sig_res_table, "output/mh_timecourse/deseq2/control_vs_m120_sig_degs.csv", col.names = TRUE, row.names = FALSE)
+fwrite(m120_ordered_sig_res_table, "output/deseq2/control_vs_m120_sig_degs.csv", col.names = TRUE, row.names = FALSE)
+
+##volcano plot
+EnhancedVolcano(m120_ordered_res_table, x="log2FoldChange", y="padj", lab="", transcriptPointSize = 3)
 
 ##m120 vs control ALL - use for GO term enrichment analysis
-fwrite(m120_ordered_res_table, "output/mh_timecourse/deseq2/control_vs_m120_all.csv", col.names = TRUE, row.names = FALSE)
+fwrite(m120_ordered_res_table, "output/deseq2/control_vs_m120_all.csv", col.names = TRUE, row.names = FALSE)
 
 m30_names <- m30_ordered_sig_res_table$rn
 m120_names <- m120_ordered_sig_res_table$rn
@@ -107,14 +111,14 @@ grid.draw(vd)
 
 unique(c(m30_names, m120_names, m240_names))
 
-trinotate_report <- fread("data/trinotate_annotation_report.txt", na.strings=".")
+trinotate_report <- fread("data/mh_transcriptome/trinotate_annotation_report.txt", na.strings=".")
 ##merge list of sig genes with annotations
 sig_w_annots <- merge(m120_ordered_sig_res_table, trinotate_report, by.x="rn", by.y="#gene_id")
 ##save file - in excel edit duplicated gene ids (where one DEG had multiple annotations for each isoform)
-fwrite(sig_w_annots, "output/mh_timecourse/deseq2/control_v_120m_sig_genes_with_annots.csv")
+fwrite(sig_w_annots, "output/deseq2/control_v_120m_sig_genes_with_annots.csv")
 
 ##Compare DEG Annots from filtered and non-filtered
-F_annots <- fread("output/mh_timecourse/deseq2/dedup_control_v_120m_sig_genes_with_annots.csv", na.strings = ".")
+F_annots <- fread("output/deseq2/dedup_control_v_120m_sig_genes_with_annots.csv", na.strings = ".")
 NF_annots <- fread("non_filtered_output/mh_timecourse/deseq2/dedup_control_v_120m_sig_genes_with_annots.csv", na.strings = ".")
 
 F_annot_names <- F_annots[,tstrsplit(sprot_Top_BLASTX_hit, "^", fixed=TRUE, keep = 1)]
@@ -127,6 +131,6 @@ grid.newpage()
 grid.draw(vd)
 
 unique_to_NF <- setdiff(NF_annot_noNA, F_annot_noNA)
-fwrite(unique_to_NF, "output/mh_timecourse/NF_vs_F/annots_unique_to_NF.csv")
+fwrite(unique_to_NF, "output/NF_v_F/annots_unique_to_NF.csv")
 unique_to_F <- setdiff(F_annot_noNA, NF_annot_noNA)
-fwrite(unique_to_F, "output/mh_timecourse/NF_vs_F/annots_unique_to_F.csv")
+fwrite(unique_to_F, "output/NF_v_F/annots_unique_to_F.csv")
