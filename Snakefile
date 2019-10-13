@@ -75,7 +75,43 @@ all_samples = sorted(set(sample_key['Sample_name']))
 rule target:
     input:
         expand('output/mh_salmon/{sample}_quant/quant.sf',
-                sample=all_samples)
+                sample=all_samples),
+        'output/mh_timecourse/no_annot/blastx.outfmt6'
+
+rule blast_unann_degs:
+    input:
+        unann_degs = 'output/mh_timecourse/no_annot/degs_no_annot.fasta'
+    output:
+        blastx_res = 'output/mh_timecourse/no_annot/blastx.outfmt6'
+    params:
+        db = 'bin/db/blastdb/nr/nr'
+    threads:
+        40
+    log:
+        'output/logs/blast_unann_degs.log'
+    shell:
+        'blastx '
+        '-query {input.unann_degs} '
+        '-db {params.db} '
+        '-num_threads {threads} '
+        '-outfmt "6 std salltitles" > {output.blastx_res} '
+
+rule filter_degs_no_annot:
+    input:
+        deg_ids = 'output/mh_timecourse/deseq2/degs_with_no_annot.txt',
+        transcriptome_length_filtered = 'data/mh_transcriptome/isoforms_by_length.fasta'
+    output:
+        unann_degs = 'output/mh_timecourse/no_annot/degs_no_annot.fasta'
+    singularity:
+        bbduk_container
+    log:
+        'output/logs/filter_degs_no_annot.log'
+    shell:
+        'filterbyname.sh '
+        'in={input.transcriptome_length_filtered} '
+        'include=t '
+        'names={input.deg_ids} '
+        'out={output.unann_degs}'
 
 rule mh_salmon_quant:
     input:
